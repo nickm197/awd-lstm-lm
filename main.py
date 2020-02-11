@@ -114,6 +114,7 @@ if os.path.exists(fn_path):
 else:
     print('Producing dataset...')
     datapath = os.path.join(BASE_DIR, args.data)
+    print('datapath: {}'.format(datapath))
     corpus = data.Corpus(datapath)
     torch.save(corpus, fn_path)
 
