@@ -67,14 +67,26 @@ parser.add_argument('--when', nargs="+", type=int, default=[-1],
 args = parser.parse_args()
 args.tied = True
 
+###############################################################################
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("torch:", torch.__version__)
+print("Cuda:", torch.backends.cudnn.cuda)
+print("CuDNN:", torch.backends.cudnn.version())
+print('device: {}'.format(device))
+###############################################################################
+
 # Set the random seed manually for reproducibility.
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 if torch.cuda.is_available():
+    args.cuda = True
     if not args.cuda:
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
     else:
         torch.cuda.manual_seed(args.seed)
+else:
+    args.cuda = False
+    print('No cuda! device is cpu :)')
 
 ###############################################################################
 # Load data
