@@ -7,7 +7,7 @@ import torch.nn as nn
 
 import data
 import model
-from sys_config import BASE_DIR
+from sys_config import BASE_DIR, CKPT_DIR
 
 from utils import batchify, get_batch, repackage_hidden
 
@@ -158,6 +158,8 @@ if not criterion:
         splits = [2800, 20000, 76000]
     print('Using', splits)
     criterion = SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
+
+print([(name, p.device) for name, p in model.named_parameters()])
 ###
 if args.cuda:
     model = model.cuda()
@@ -246,6 +248,7 @@ lr = args.lr
 best_val_loss = []
 stored_loss = 100000000
 
+print('Starting training......')
 # At any point you can hit Ctrl + C to break out of training early.
 try:
     optimizer = None
@@ -254,7 +257,9 @@ try:
         optimizer = torch.optim.SGD(params, lr=args.lr, weight_decay=args.wdecay)
     if args.optimizer == 'adam':
         optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.wdecay)
+
     for epoch in range(1, args.epochs+1):
+        print('Starting epoch {}'.format(epoch))
         epoch_start_time = time.time()
         train()
         if 't0' in optimizer.param_groups[0]:
@@ -271,7 +276,7 @@ try:
             print('-' * 89)
 
             if val_loss2 < stored_loss:
-                model_save(args.save)
+                model_save(os.path.join(CKPT_DIR, args.save))
                 print('Saving Averaged!')
                 stored_loss = val_loss2
 
@@ -287,7 +292,7 @@ try:
             print('-' * 89)
 
             if val_loss < stored_loss:
-                model_save(args.save)
+                model_save(os.path.join(CKPT_DIR, args.save))
                 print('Saving model (new best validation)')
                 stored_loss = val_loss
 
@@ -297,7 +302,7 @@ try:
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
-                model_save('{}.e{}'.format(args.save, epoch))
+                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch))
                 print('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
@@ -308,7 +313,7 @@ except KeyboardInterrupt:
     print('Exiting from training early')
 
 # Load the best saved model.
-model_load(args.save)
+model_load(os.path.join(CKPT_DIR, args.save))
 
 # Run on test data.
 test_loss = evaluate(test_data, test_batch_size)
