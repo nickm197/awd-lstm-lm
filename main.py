@@ -12,7 +12,7 @@ from sys_config import BASE_DIR, CKPT_DIR
 from utils import batchify, get_batch, repackage_hidden
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
-parser.add_argument('--data', type=str, default='data/wikitext-2/',
+parser.add_argument('--data', type=str, default='data/wikitext-2',
                     help='location of the data corpus')
 parser.add_argument('--model', type=str, default='LSTM',
                     help='type of recurrent net (LSTM, QRNN, GRU)')
