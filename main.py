@@ -107,15 +107,15 @@ import hashlib
 fn = 'corpus.{}'.format(args.data)
 fn = fn.replace('data/', '').replace('wikitext-2', 'wt2')
 
-datapath = os.path.join(BASE_DIR, fn)
-if os.path.exists(fn):
+fn_path = os.path.join(BASE_DIR, fn)
+if os.path.exists(fn_path):
     print('Loading cached dataset...')
-    corpus = torch.load(fn)
+    corpus = torch.load(fn_path)
 else:
     print('Producing dataset...')
     datapath = os.path.join(BASE_DIR, args.data)
-    corpus = data.Corpus(args.data)
-    torch.save(corpus, fn)
+    corpus = data.Corpus(datapath)
+    torch.save(corpus, fn_path)
 
 eval_batch_size = 10
 test_batch_size = 1
