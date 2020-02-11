@@ -11,7 +11,7 @@ import model
 from utils import batchify, get_batch, repackage_hidden
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
-parser.add_argument('--data', type=str, default='data/penn/',
+parser.add_argument('--data', type=str, default='data/wikitext-2/',
                     help='location of the data corpus')
 parser.add_argument('--model', type=str, default='LSTM',
                     help='type of recurrent net (LSTM, QRNN, GRU)')
@@ -103,7 +103,10 @@ def model_load(fn):
 
 import os
 import hashlib
-fn = 'corpus.{}.data'.format(hashlib.md5(args.data.encode()).hexdigest())
+# fn = 'corpus.{}.data'.format(hashlib.md5(args.data.encode()).hexdigest())
+fn = 'corpus.{}'.format(args.data)
+fn = fn.replace('data/', '').replace('wikitext-2', 'wt2')
+
 if os.path.exists(fn):
     print('Loading cached dataset...')
     corpus = torch.load(fn)
