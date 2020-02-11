@@ -103,6 +103,7 @@ def model_load(fn):
 
 import os
 import hashlib
+print('Base directory: {}'.format(BASE_DIR))
 # fn = 'corpus.{}.data'.format(hashlib.md5(args.data.encode()).hexdigest())
 fn = 'corpus.{}'.format(args.data)
 fn = fn.replace('data/', '').replace('wikitext-2', 'wt2')
