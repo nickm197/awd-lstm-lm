@@ -7,6 +7,7 @@ import torch.nn as nn
 
 import data
 import model
+from sys_config import BASE_DIR
 
 from utils import batchify, get_batch, repackage_hidden
 
@@ -91,7 +92,6 @@ else:
 ###############################################################################
 # Load data
 ###############################################################################
-
 def model_save(fn):
     with open(fn, 'wb') as f:
         torch.save([model, criterion, optimizer], f)
@@ -107,11 +107,13 @@ import hashlib
 fn = 'corpus.{}'.format(args.data)
 fn = fn.replace('data/', '').replace('wikitext-2', 'wt2')
 
+datapath = os.path.join(BASE_DIR, fn)
 if os.path.exists(fn):
     print('Loading cached dataset...')
     corpus = torch.load(fn)
 else:
     print('Producing dataset...')
+    datapath = os.path.join(BASE_DIR, args.data)
     corpus = data.Corpus(args.data)
     torch.save(corpus, fn)
 
