@@ -7,7 +7,7 @@ import torch.nn as nn
 
 import data
 import model
-from sys_config import BASE_DIR, CKPT_DIR
+from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 from utils import batchify, get_batch, repackage_hidden
 
@@ -108,15 +108,13 @@ print('Base directory: {}'.format(BASE_DIR))
 fn = 'corpus.{}'.format(args.data)
 fn = fn.replace('data/', '').replace('wikitext-2', 'wt2')
 
-fn_path = os.path.join(BASE_DIR, fn)
+fn_path = os.path.join(CACHE_DIR, fn)
 if os.path.exists(fn_path):
     print('Loading cached dataset...')
     corpus = torch.load(fn_path)
 else:
     print('Producing dataset...')
     datapath = os.path.join(BASE_DIR, args.data)
-    print('datapath: {}'.format(datapath))
-    print(args.data)
     corpus = data.Corpus(datapath)
     torch.save(corpus, fn_path)
 
@@ -219,7 +217,7 @@ def train():
         raw_loss = criterion(model.decoder.weight, model.decoder.bias, output, targets)
 
         loss = raw_loss
-        # Activiation Regularization
+        # Activation Regularization
         if args.alpha: loss = loss + sum(args.alpha * dropped_rnn_h.pow(2).mean() for dropped_rnn_h in dropped_rnn_hs[-1:])
         # Temporal Activation Regularization (slowness)
         if args.beta: loss = loss + sum(args.beta * (rnn_h[1:] - rnn_h[:-1]).pow(2).mean() for rnn_h in rnn_hs[-1:])
