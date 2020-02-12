@@ -263,7 +263,7 @@ try:
         print('Starting epoch {}'.format(epoch))
         epoch_start_time = time.time()
         train()
-        if 't0' in optimizer.param_groups[0]:
+        if 't0' in optimizer.param_groups[0]: # if ASGD
             tmp = {}
             for prm in model.parameters():
                 tmp[prm] = prm.data.clone()
@@ -301,7 +301,8 @@ try:
             # if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (len(best_val_loss)>args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
             if True:
                 print('Switching to ASGD')
-                optimizer = ASGD(model.parameters(), lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
+                parameters = filter(lambda p: p.requires_grad, model.parameters())
+                optimizer = ASGD(parameters, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
