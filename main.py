@@ -5,8 +5,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+
 import data
 import model
+from asgd import ASGD
 from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 from utils import batchify, get_batch, repackage_hidden
@@ -296,9 +298,10 @@ try:
                 print('Saving model (new best validation)')
                 stored_loss = val_loss
 
-            if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (len(best_val_loss)>args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
+            # if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (len(best_val_loss)>args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
+            if True:
                 print('Switching to ASGD')
-                optimizer = torch.optim.ASGD(model.parameters(), lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
+                optimizer = ASGD(model.parameters(), lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
