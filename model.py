@@ -76,9 +76,9 @@ class RNNModel(nn.Module):
         #raw_output, hidden = self.rnn(emb, hidden)
         raw_outputs = []
         outputs = []
-        # self.rnns.flatten_parameters()
+
         for l, rnn in enumerate(self.rnns):
-            rnn.module.flatten_parameters()
+            # rnn.module.flatten_parameters() not working
             current_input = raw_output
             raw_output, new_h = rnn(raw_output, hidden[l])
             new_hidden.append(new_h)
