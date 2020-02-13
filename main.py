@@ -71,11 +71,12 @@ args = parser.parse_args()
 args.tied = True
 
 ###############################################################################
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("torch:", torch.__version__)
-print("Cuda:", torch.backends.cudnn.cuda)
-print("CuDNN:", torch.backends.cudnn.version())
-print('device: {}'.format(device))
+if torch.__version__ != '0.1.12_2':
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Cuda:", torch.backends.cudnn.cuda)
+    print("CuDNN:", torch.backends.cudnn.version())
+    print('device: {}'.format(device))
 ###############################################################################
 
 # Set the random seed manually for reproducibility.
@@ -160,13 +161,15 @@ if not criterion:
     print('Using', splits)
     criterion = SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
 
-print([(name, p.device) for name, p in model.named_parameters()])
+if torch.__version__ != '0.1.12_2':
+    print([(name, p.device) for name, p in model.named_parameters()])
 ###
 if args.cuda:
     model = model.cuda()
     criterion = criterion.cuda()
 ###
 params = list(model.parameters()) + list(criterion.parameters())
+trainable_parameters = [p for p in model.parameters() if p.requires_grad]
 total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
 print('Args:', args)
 print('Model total parameters:', total_params)
@@ -255,7 +258,7 @@ try:
     optimizer = None
     # Ensure the optimizer is optimizing params, which includes both the model's weights as well as the criterion's weight (i.e. Adaptive Softmax)
     if args.optimizer == 'sgd':
-        optimizer = torch.optim.SGD(params, lr=args.lr, weight_decay=args.wdecay)
+        optimizer = torch.optim.SGD(params, lr=args.lr, weight_decay=args.wdecay) # params not trainable params... (?)
     if args.optimizer == 'adam':
         optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.wdecay)
 
@@ -301,8 +304,8 @@ try:
             # if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (len(best_val_loss)>args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
             if True:
                 print('Switching to ASGD')
-                parameters = filter(lambda p: p.requires_grad, model.parameters())
-                optimizer = ASGD(parameters, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
+                # optimizer = ASGD(trainable_parameters, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
+                optimizer = ASGD(params, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
