@@ -3,8 +3,9 @@ import os
 import torch
 
 print("torch:", torch.__version__)
-print("Cuda:", torch.backends.cudnn.cuda)
-print("CuDNN:", torch.backends.cudnn.version())
+if torch.__version__ != '0.1.12_2':
+    print("Cuda:", torch.backends.cudnn.cuda)
+    print("CuDNN:", torch.backends.cudnn.version())
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
