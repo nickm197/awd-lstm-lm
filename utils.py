@@ -4,10 +4,17 @@ import torch
 def repackage_hidden(h):
     """Wraps hidden states in new Tensors,
     to detach them from their history."""
-    if isinstance(h, torch.Tensor):
-        return h.detach()
+    if torch.__version__ == '0.1.12_2':
+        from torch.autograd import Variable
+        if type(h) == Variable:
+            return Variable(h.data)
+        else:
+            return tuple(repackage_hidden(v) for v in h)
     else:
-        return tuple(repackage_hidden(v) for v in h)
+        if isinstance(h, torch.Tensor):
+            return h.detach()
+        else:
+            return tuple(repackage_hidden(v) for v in h)
 
 
 def batchify(data, bsz, args):
