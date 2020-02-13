@@ -286,7 +286,8 @@ try:
                 stored_loss = val_loss2
 
             for prm in model.parameters():
-                prm.data = tmp[prm].clone()
+                if prm in tmp.keys():
+                    prm.data = tmp[prm].clone()
 
         else:
             val_loss = evaluate(val_data, eval_batch_size)
