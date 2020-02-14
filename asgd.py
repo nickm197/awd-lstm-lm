@@ -1,6 +1,6 @@
 import math
 import torch
-from .optimizer import Optimizer
+from torch.optim.optimizer import Optimizer
 
 """
 pytorch 1.2.0 ASGD
