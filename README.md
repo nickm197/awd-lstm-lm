@@ -1,5 +1,5 @@
 # AWD-LSTM with PyTorch 1.2.0
-I have made minor changes to the original AWD-LSTM codebase (that uses PyTorch 0.1.12) to make it compatible with PyTorch [1.2.0](https://pytorch.org/docs/1.2.0/).
+I have made minor changes to the original AWD-LSTM codebase (that uses PyTorch 0.1.12 or 0.4) to make it compatible with PyTorch [1.2.0](https://pytorch.org/docs/1.2.0/).
 
 ## Software Requirements
 Create a conda environment to run the code:
