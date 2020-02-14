@@ -1,7 +1,10 @@
 import math
 import torch
-from torch.optim.optimizer import Optimizer
+from .optimizer import Optimizer
 
+"""
+pytorch 1.2.0 ASGD
+"""
 
 class ASGD(Optimizer):
     """Implements Averaged Stochastic Gradient Descent.
@@ -57,7 +60,7 @@ class ASGD(Optimizer):
                     state['step'] = 0
                     state['eta'] = group['lr']
                     state['mu'] = 1
-                    state['ax'] = torch.zeros_like(p.data, memory_format=torch.preserve_format)
+                    state['ax'] = torch.zeros_like(p.data)
 
                 state['step'] += 1
 
