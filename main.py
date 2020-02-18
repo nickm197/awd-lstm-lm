@@ -265,6 +265,11 @@ try:
         print('Starting epoch {}'.format(epoch))
         epoch_start_time = time.time()
         train()
+        try:
+            torch.cuda.empty_cache()
+            print('torch cuda empty cache')
+        except:
+            pass
         if 't0' in optimizer.param_groups[0]: # if ASGD
             tmp = {}
             for prm in model.parameters():
