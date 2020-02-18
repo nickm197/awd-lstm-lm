@@ -94,9 +94,9 @@ else:
 ###############################################################################
 # Load data
 ###############################################################################
-def model_save(fn):
+def model_save(fn, vocab=None, val_loss=None):
     with open(fn, 'wb') as f:
-        torch.save([model, criterion, optimizer], f)
+        torch.save([model, criterion, optimizer, vocab, val_loss], f)
 
 def model_load(fn):
     global model, criterion, optimizer
@@ -126,6 +126,7 @@ train_data = batchify(corpus.train, args.batch_size, args)
 val_data = batchify(corpus.valid, eval_batch_size, args)
 test_data = batchify(corpus.test, test_batch_size, args)
 
+vocabulary = corpus.dictionary
 ###############################################################################
 # Build the model
 ###############################################################################
@@ -270,6 +271,7 @@ try:
             print('torch cuda empty cache')
         except:
             pass
+
         if 't0' in optimizer.param_groups[0]: # if ASGD
             tmp = {}
             for prm in model.parameters():
@@ -285,7 +287,7 @@ try:
             print('-' * 89)
 
             if val_loss2 < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save))
+                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss2.item())
                 print('Saving Averaged!')
                 stored_loss = val_loss2
 
@@ -302,13 +304,13 @@ try:
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
                 'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
-              epoch, (time.time() - epoch_start_time), val_loss, math.exp(val_loss), val_loss / math.log(2)))
+              epoch, (time.time() - epoch_start_time), val_loss.item(), math.exp(val_loss), val_loss / math.log(2)))
             print('-' * 89)
 
             if val_loss < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save))
+                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss.item())
                 print('Saving model (new best validation)')
-                stored_loss = val_loss
+                stored_loss = val_loss.item()
 
             if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (len(best_val_loss)>args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
             # if 't0' not in optimizer.param_groups[0]:
@@ -318,11 +320,11 @@ try:
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
-                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch))
+                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch), vocabulary, val_loss.item())
                 print('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
-            best_val_loss.append(val_loss)
+            best_val_loss.append(val_loss.item())
 
 except KeyboardInterrupt:
     print('-' * 89)
