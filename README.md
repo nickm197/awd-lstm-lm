@@ -1,3 +1,19 @@
+# AWD-LSTM with PyTorch 1.2.0
+I have made minor changes to the original AWD-LSTM codebase (that uses PyTorch 0.1.12 or 0.4) to make it compatible with PyTorch [1.2.0](https://pytorch.org/docs/1.2.0/).
+
+## Software Requirements
+Create a conda environment to run the code:
+```
+conda create -n awd python=3.6
+source activate awd
+conda install pytorch==1.2.0 torchvision==0.4.0 cudatoolkit=10.0 -c pytorch
+conda install -c anaconda cupy
+pip install pynvrtc git+https://github.com/salesforce/pytorch-qrnn
+```
+Note that `cupy`, `pynvtrc`, and `pytorch-qrnn` are required only if you want to run a QRNN-LSTM.
+
+------------------------------
+_Original readme:_
 # LSTM and QRNN Language Model Toolkit
 
 This repository contains the code used for two [Salesforce Research](https://einstein.ai/) papers:
