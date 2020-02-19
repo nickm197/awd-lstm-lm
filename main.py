@@ -310,7 +310,7 @@ try:
             if val_loss < stored_loss:
                 model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss)
                 print('Saving model (new best validation)')
-                stored_loss = val_loss.item()
+                stored_loss = val_loss
 
             if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (len(best_val_loss)>args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
             # if 't0' not in optimizer.param_groups[0]:
@@ -324,7 +324,7 @@ try:
                 print('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
-            best_val_loss.append(val_loss.item())
+            best_val_loss.append(val_loss)
 
 except KeyboardInterrupt:
     print('-' * 89)
