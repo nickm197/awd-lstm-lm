@@ -308,7 +308,7 @@ try:
             print('-' * 89)
 
             if val_loss < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss.item())
+                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss)
                 print('Saving model (new best validation)')
                 stored_loss = val_loss.item()
 
