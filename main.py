@@ -292,7 +292,8 @@ try:
             print('-' * 89)
 
             if val_loss2 < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss2, vars(args))
+                model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                           vocabulary, val_loss2, vars(args))
                 print('Saving Averaged!')
                 stored_loss = val_loss2
 
@@ -313,7 +314,8 @@ try:
             print('-' * 89)
 
             if val_loss < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss, vars(args))
+                model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                           vocabulary, val_loss, vars(args))
                 print('Saving model (new best validation)')
                 stored_loss = val_loss
 
@@ -325,7 +327,9 @@ try:
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
-                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch), vocabulary, val_loss, vars(args))
+                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch),
+                           model, criterion, optimizer,
+                           vocabulary, val_loss, vars(args))
                 print('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
