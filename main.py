@@ -269,6 +269,8 @@ try:
         # print(gpu)
         if args.cuda:
             print(torch.cuda.get_device_properties(device).total_memory)
+            print(torch.cuda.memory_cached(device))
+            print(torch.cuda.memory_allocated(device))
         ####################################
         train()
         try:
