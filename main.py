@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 import math
 import numpy as np
@@ -8,9 +9,12 @@ import torch.nn as nn
 import data
 import model
 from asgd import ASGD
+from model_save import model_load, model_save
 from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 from utils import batchify, get_batch, repackage_hidden
+
+
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='data/wikitext-2',
@@ -77,6 +81,7 @@ if torch.__version__ != '0.1.12_2':
     print("CuDNN:", torch.backends.cudnn.version())
     print('device: {}'.format(device))
 ###############################################################################
+global model, criterion, optimizer
 
 # Set the random seed manually for reproducibility.
 np.random.seed(args.seed)
@@ -94,17 +99,6 @@ else:
 ###############################################################################
 # Load data
 ###############################################################################
-def model_save(fn, vocab=None, val_loss=None):
-    with open(fn, 'wb') as f:
-        torch.save([model, criterion, optimizer, vocab, val_loss], f)
-
-def model_load(fn):
-    global model, criterion, optimizer
-    with open(fn, 'rb') as f:
-        model, criterion, optimizer = torch.load(f)
-
-import os
-import hashlib
 print('Base directory: {}'.format(BASE_DIR))
 # fn = 'corpus.{}.data'.format(hashlib.md5(args.data.encode()).hexdigest())
 fn = 'corpus.{}'.format(args.data)
@@ -127,6 +121,7 @@ val_data = batchify(corpus.valid, eval_batch_size, args)
 test_data = batchify(corpus.test, test_batch_size, args)
 
 vocabulary = corpus.dictionary
+
 ###############################################################################
 # Build the model
 ###############################################################################
@@ -135,7 +130,10 @@ from splitcross import SplitCrossEntropyLoss
 criterion = None
 
 ntokens = len(corpus.dictionary)
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth, args.dropouti, args.dropoute, args.wdrop, args.tied)
+model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid,
+                       args.nlayers, args.dropout, args.dropouth,
+                       args.dropouti, args.dropoute, args.wdrop, args.tied)
+
 ###
 if args.resume:
     print('Resuming model ...')
@@ -235,7 +233,7 @@ def train():
         total_loss += raw_loss.data
         optimizer.param_groups[0]['lr'] = lr2
         if batch % args.log_interval == 0 and batch > 0:
-            cur_loss = total_loss.item() / args.log_interval
+            cur_loss = total_loss / args.log_interval
             elapsed = time.time() - start_time
             print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:05.5f} | ms/batch {:5.2f} | '
                     'loss {:5.2f} | ppl {:8.2f} | bpc {:8.3f}'.format(
@@ -265,6 +263,13 @@ try:
     for epoch in range(1, args.epochs+1):
         print('Starting epoch {}'.format(epoch))
         epoch_start_time = time.time()
+        ####################################
+        # memory debug
+        # gpu = get_gpu_memory_map()
+        # print(gpu)
+        if args.cuda:
+            print(torch.cuda.get_device_properties(device).total_memory)
+        ####################################
         train()
         try:
             torch.cuda.empty_cache()
@@ -287,7 +292,7 @@ try:
             print('-' * 89)
 
             if val_loss2 < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss2.item())
+                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss2, vars(args))
                 print('Saving Averaged!')
                 stored_loss = val_loss2
 
@@ -308,7 +313,7 @@ try:
             print('-' * 89)
 
             if val_loss < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss)
+                model_save(os.path.join(CKPT_DIR, args.save), vocabulary, val_loss, vars(args))
                 print('Saving model (new best validation)')
                 stored_loss = val_loss
 
@@ -320,7 +325,7 @@ try:
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
-                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch), vocabulary, val_loss.item())
+                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch), vocabulary, val_loss, vars(args))
                 print('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
