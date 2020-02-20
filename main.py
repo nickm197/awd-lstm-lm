@@ -323,6 +323,7 @@ try:
                     # nparams_in_temp_keys += 1
                     # prm.data = tmp[prm].clone()
                     prm.data = tmp[prm].detach()
+                    prm.requires_grad = True
             # print('params {}, params in tmp keys: {}'.format(nparams, nparams_in_temp_keys))
             del tmp
         else:
