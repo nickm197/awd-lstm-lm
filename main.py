@@ -267,6 +267,7 @@ try:
         epoch_start_time = time.time()
         ####################################
         # memory debug
+        print('Memory before train')
         if args.cuda:
             print(torch.cuda.get_device_properties(device).total_memory)
             print(torch.cuda.memory_cached(device))
@@ -274,21 +275,31 @@ try:
         ####################################
         train()
         ####################################
-        try:
-            torch.cuda.empty_cache()
-            print('torch cuda empty cache')
-        except:
-            pass
+        print('Memory after train')
+        if args.cuda:
+            print(torch.cuda.get_device_properties(device).total_memory)
+            print(torch.cuda.memory_cached(device))
+            print(torch.cuda.memory_allocated(device))
+        ####################################
+        if args.cuda:
+            try:
+                torch.cuda.empty_cache()
+                print('torch cuda empty cache')
+            except:
+                pass
         ####################################
         if 't0' in optimizer.param_groups[0]:  # if ASGD
             print('{} model params (ASGD before eval)'.format(len([prm for prm in model.parameters()])))
             tmp = {}
             for prm in model.parameters():
                 # tmp[prm] = prm.data.clone()
-                tmp[prm] = prm.data.copy_()
+                tmp[prm] = prm.data.detach()
+                # tmp[prm].copy_(prm.data)
                 if 'ax' in optimizer.state[prm]:  # added this line because of error: File "main.py", line 268, in <module> prm.data = optimizer.state[prm]['ax'].clone() KeyError: 'ax'
                     # prm.data = optimizer.state[prm]['ax'].clone()
-                    prm.data = optimizer.state[prm]['ax'].copy_()
+                    prm.data = optimizer.state[prm]['ax'].detach()
+                    # prm.data.copy_(optimizer.state[prm]['ax'])
+
 
             val_loss2 = evaluate(val_data)
             print('{} model params (ASGD after eval)'.format(len([prm for prm in model.parameters()])))
@@ -311,7 +322,7 @@ try:
                 if prm in tmp.keys():
                     # nparams_in_temp_keys += 1
                     # prm.data = tmp[prm].clone()
-                    prm.data = tmp[prm].copy_()
+                    prm.data = tmp[prm].detach()
             # print('params {}, params in tmp keys: {}'.format(nparams, nparams_in_temp_keys))
             del tmp
         else:
