@@ -289,43 +289,45 @@ try:
                 pass
         ####################################
         if 't0' in optimizer.param_groups[0]:  # if ASGD
-            print('{} model params (ASGD before eval)'.format(len([prm for prm in model.parameters()])))
-            tmp = {}
-            for prm in model.parameters():
-                # tmp[prm] = prm.data.clone()
-                tmp[prm] = prm.data.detach()
-                # tmp[prm].copy_(prm.data)
-                if 'ax' in optimizer.state[prm]:  # added this line because of error: File "main.py", line 268, in <module> prm.data = optimizer.state[prm]['ax'].clone() KeyError: 'ax'
-                    # prm.data = optimizer.state[prm]['ax'].clone()
-                    prm.data = optimizer.state[prm]['ax'].detach()
-                    # prm.data.copy_(optimizer.state[prm]['ax'])
+
+            if epoch >= 740:
+                print('{} model params (ASGD before eval)'.format(len([prm for prm in model.parameters()])))
+                tmp = {}
+                for prm in model.parameters():
+                    # tmp[prm] = prm.data.clone()
+                    tmp[prm] = prm.data.detach()
+                    # tmp[prm].copy_(prm.data)
+                    if 'ax' in optimizer.state[prm]:  # added this line because of error: File "main.py", line 268, in <module> prm.data = optimizer.state[prm]['ax'].clone() KeyError: 'ax'
+                        # prm.data = optimizer.state[prm]['ax'].clone()
+                        prm.data = optimizer.state[prm]['ax'].detach()
+                        # prm.data.copy_(optimizer.state[prm]['ax'])
 
 
-            val_loss2 = evaluate(val_data)
-            print('{} model params (ASGD after eval)'.format(len([prm for prm in model.parameters()])))
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-                  'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
-                epoch, (time.time() - epoch_start_time), val_loss2, math.exp(val_loss2), val_loss2 / math.log(2)))
-            print('-' * 89)
+                val_loss2 = evaluate(val_data)
+                print('{} model params (ASGD after eval)'.format(len([prm for prm in model.parameters()])))
+                print('-' * 89)
+                print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+                      'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
+                    epoch, (time.time() - epoch_start_time), val_loss2, math.exp(val_loss2), val_loss2 / math.log(2)))
+                print('-' * 89)
 
-            if val_loss2 < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
-                           vocabulary, val_loss2, vars(args))
-                print('Saving Averaged!')
-                stored_loss = val_loss2
+                if val_loss2 < stored_loss:
+                    model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                               vocabulary, val_loss2, vars(args))
+                    print('Saving Averaged!')
+                    stored_loss = val_loss2
 
-            # nparams = 0
-            # nparams_in_temp_keys = 0
-            for prm in model.parameters():
-                # nparams += 1
-                if prm in tmp.keys():
-                    # nparams_in_temp_keys += 1
-                    # prm.data = tmp[prm].clone()
-                    prm.data = tmp[prm].detach()
-                    prm.requires_grad = True
-            # print('params {}, params in tmp keys: {}'.format(nparams, nparams_in_temp_keys))
-            del tmp
+                # nparams = 0
+                # nparams_in_temp_keys = 0
+                for prm in model.parameters():
+                    # nparams += 1
+                    if prm in tmp.keys():
+                        # nparams_in_temp_keys += 1
+                        # prm.data = tmp[prm].clone()
+                        prm.data = tmp[prm].detach()
+                        prm.requires_grad = True
+                # print('params {}, params in tmp keys: {}'.format(nparams, nparams_in_temp_keys))
+                del tmp
         else:
             print('{} model params (SGD before eval)'.format(len([prm for prm in model.parameters()])))
             val_loss = evaluate(val_data, eval_batch_size)
