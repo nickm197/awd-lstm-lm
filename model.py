@@ -5,13 +5,13 @@ from embed_regularize import embedded_dropout
 from locked_dropout import LockedDropout
 from weight_drop import WeightDrop
 
-class RNNModel(nn.Module):
+class AWD(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
     def __init__(self, rnn_type, ntoken, ninp, nhid, nlayers,
                  dropout=0.5, dropouth=0.5, dropouti=0.5,
                  dropoute=0.1, wdrop=0, tie_weights=False):
-        super(RNNModel, self).__init__()
+        super(AWD, self).__init__()
         self.lockdrop = LockedDropout()
         self.idrop = nn.Dropout(dropouti)
         self.hdrop = nn.Dropout(dropouth)
@@ -80,7 +80,7 @@ class RNNModel(nn.Module):
         outputs = []
 
         for l, rnn in enumerate(self.rnns):
-            # rnn.module.flatten_parameters() not working
+            rnn.module.flatten_parameters()  # not working
             current_input = raw_output
             raw_output, new_h = rnn(raw_output, hidden[l])
             new_hidden.append(new_h)

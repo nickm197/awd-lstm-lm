@@ -9,7 +9,7 @@ import torch.nn as nn
 import data
 import model
 from asgd import ASGD
-from model_save import model_load, model_save
+from model_save import model_load, model_save, model_state_save
 from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 from utils import batchify, get_batch, repackage_hidden
@@ -45,7 +45,7 @@ parser.add_argument('--dropoute', type=float, default=0.1,
                     help='dropout to remove words from embedding layer (0 = no dropout)')
 parser.add_argument('--wdrop', type=float, default=0.5,
                     help='amount of weight dropout to apply to the RNN hidden to hidden matrix')
-parser.add_argument('--seed', type=int, default=1111,
+parser.add_argument('--seed', type=int, default=1882,
                     help='random seed')
 parser.add_argument('--nonmono', type=int, default=5,
                     help='random seed')
@@ -68,8 +68,13 @@ parser.add_argument('--optimizer', type=str, default='sgd',
                     help='optimizer to use (sgd, adam)')
 parser.add_argument('--when', nargs="+", type=int, default=[-1],
                     help='When (which epochs) to divide the learning rate by 10 - accepts multiple')
+parser.add_argument("-g", "--gpu", required=False,
+                    default='1', help="gpu on which this experiment runs")
 args = parser.parse_args()
 args.tied = True
+
+os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+print("\nThis experiment runs on gpu {}...\n".format(args.gpu))
 
 ###############################################################################
 print("torch:", torch.__version__)
@@ -128,7 +133,7 @@ from splitcross import SplitCrossEntropyLoss
 criterion = None
 
 ntokens = len(corpus.dictionary)
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid,
+model = model.AWD(args.model, ntokens, args.emsize, args.nhid,
                        args.nlayers, args.dropout, args.dropouth,
                        args.dropouti, args.dropoute, args.wdrop, args.tied)
 
@@ -158,8 +163,8 @@ if not criterion:
     print('Using splits {}'.format(splits))
     criterion = SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
 
-if torch.__version__ != '0.1.12_2':
-    print([(name, p.device) for name, p in model.named_parameters()])
+# if torch.__version__ != '0.1.12_2':
+#     print([(name, p.device) for name, p in model.named_parameters()])
 ###
 if args.cuda:
     model = model.cuda()
@@ -323,7 +328,9 @@ try:
             print('-' * 89)
 
             if val_loss2 < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                # model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                #            vocabulary, val_loss2, math.exp(val_loss2), vars(args), epoch)
+                model_state_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
                            vocabulary, val_loss2, math.exp(val_loss2), vars(args), epoch)
                 print('Saving Averaged!')
                 stored_loss = val_loss2
@@ -350,7 +357,9 @@ try:
             print('-' * 89)
 
             if val_loss < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                # model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
+                model_state_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
                            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
                 print('Saving model (new best validation)')
                 stored_loss = val_loss
@@ -364,8 +373,10 @@ try:
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
-                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
-                           vocabulary, val_loss, math.exp(val_loss), vars(args), epoch))
+                # model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch))
+                model_state_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), args.save), model, criterion, optimizer,
+                           vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
                 print('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
