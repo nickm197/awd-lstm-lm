@@ -29,9 +29,9 @@ parser.add_argument('--lr', type=float, default=30,
                     help='initial learning rate')
 parser.add_argument('--clip', type=float, default=0.25,
                     help='gradient clipping')
-parser.add_argument('--epochs', type=int, default=8000,
+parser.add_argument('--epochs', type=int, default=800,
                     help='upper epoch limit')
-parser.add_argument('--batch_size', type=int, default=80, metavar='N',
+parser.add_argument('--batch_size', type=int, default=32, metavar='N',
                     help='batch size')
 parser.add_argument('--bptt', type=int, default=70,
                     help='sequence length')
@@ -79,7 +79,7 @@ if torch.__version__ != '0.1.12_2':
     print("CuDNN:", torch.backends.cudnn.version())
     print('device: {}'.format(device))
 ###############################################################################
-# global model, criterion, optimizer
+global model, criterion, optimizer
 
 # Set the random seed manually for reproducibility.
 np.random.seed(args.seed)
@@ -246,6 +246,15 @@ def train():
         batch += 1
         i += seq_len
 
+        ####################################
+        if args.cuda:
+            try:
+                torch.cuda.empty_cache()
+                print('torch cuda empty cache')
+            except:
+                pass
+        ####################################
+
 
 # Loop over epochs.
 lr = args.lr
@@ -289,45 +298,47 @@ try:
                 pass
         ####################################
         if 't0' in optimizer.param_groups[0]:  # if ASGD
-
-            if epoch >= 740:
-                print('{} model params (ASGD before eval)'.format(len([prm for prm in model.parameters()])))
-                tmp = {}
-                for prm in model.parameters():
+            tmp = {}
+            for prm in model.parameters():
+                if prm in optimizer.state.keys():
                     # tmp[prm] = prm.data.clone()
                     tmp[prm] = prm.data.detach()
                     # tmp[prm].copy_(prm.data)
-                    if 'ax' in optimizer.state[prm]:  # added this line because of error: File "main.py", line 268, in <module> prm.data = optimizer.state[prm]['ax'].clone() KeyError: 'ax'
-                        # prm.data = optimizer.state[prm]['ax'].clone()
-                        prm.data = optimizer.state[prm]['ax'].detach()
-                        # prm.data.copy_(optimizer.state[prm]['ax'])
+                    # if 'ax' in optimizer.state[prm]:  # added this line because of error: File "main.py", line 268, in <module> prm.data = optimizer.state[prm]['ax'].clone() KeyError: 'ax'
+                    # prm.data = optimizer.state[prm]['ax'].clone()
+                    prm.data = optimizer.state[prm]['ax'].detach()
 
+                # else:
+                #     print(prm)
 
-                val_loss2 = evaluate(val_data)
-                print('{} model params (ASGD after eval)'.format(len([prm for prm in model.parameters()])))
-                print('-' * 89)
-                print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-                      'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
-                    epoch, (time.time() - epoch_start_time), val_loss2, math.exp(val_loss2), val_loss2 / math.log(2)))
-                print('-' * 89)
+                    # prm.data = optimizer.state[prm]['ax'].clone()
+                    # prm.data = optimizer.state[prm]['ax'].detach()
+                    # prm.data.copy_(optimizer.state[prm]['ax'])
 
-                if val_loss2 < stored_loss:
-                    model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
-                               vocabulary, val_loss2, vars(args))
-                    print('Saving Averaged!')
-                    stored_loss = val_loss2
+            val_loss2 = evaluate(val_data)
+            print('-' * 89)
+            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+                  'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
+                epoch, (time.time() - epoch_start_time), val_loss2, math.exp(val_loss2), val_loss2 / math.log(2)))
+            print('-' * 89)
 
-                # nparams = 0
-                # nparams_in_temp_keys = 0
-                for prm in model.parameters():
-                    # nparams += 1
-                    if prm in tmp.keys():
-                        # nparams_in_temp_keys += 1
-                        # prm.data = tmp[prm].clone()
-                        prm.data = tmp[prm].detach()
-                        prm.requires_grad = True
-                # print('params {}, params in tmp keys: {}'.format(nparams, nparams_in_temp_keys))
-                del tmp
+            if val_loss2 < stored_loss:
+                model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                           vocabulary, val_loss2, math.exp(val_loss2), vars(args), epoch)
+                print('Saving Averaged!')
+                stored_loss = val_loss2
+
+            # nparams = 0
+            # nparams_in_temp_keys = 0
+            for prm in model.parameters():
+                # nparams += 1
+                if prm in tmp.keys():
+                    # nparams_in_temp_keys += 1
+                    # prm.data = tmp[prm].clone()
+                    prm.data = tmp[prm].detach()
+                    prm.requires_grad = True
+            # print('params {}, params in tmp keys: {}'.format(nparams, nparams_in_temp_keys))
+            del tmp
         else:
             print('{} model params (SGD before eval)'.format(len([prm for prm in model.parameters()])))
             val_loss = evaluate(val_data, eval_batch_size)
@@ -340,7 +351,7 @@ try:
 
             if val_loss < stored_loss:
                 model_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
-                           vocabulary, val_loss, vars(args))
+                           vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
                 print('Saving model (new best validation)')
                 stored_loss = val_loss
 
@@ -353,9 +364,8 @@ try:
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
-                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), epoch),
-                           model, criterion, optimizer,
-                           vocabulary, val_loss, vars(args))
+                model_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
+                           vocabulary, val_loss, math.exp(val_loss), vars(args), epoch))
                 print('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
