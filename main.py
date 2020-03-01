@@ -54,7 +54,7 @@ parser.add_argument('--cuda', action='store_false',
 parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                     help='report interval')
 randomhash = ''.join(str(time.time()).split('.'))
-parser.add_argument('--save', type=str, default=randomhash + '.pt',
+parser.add_argument('--save', type=str, default='BLIBLU' + '.pt',
                     help='path to save the final model')
 parser.add_argument('--alpha', type=float, default=2,
                     help='alpha L2 regularization on RNN activation (alpha = 0 means no regularization)')
