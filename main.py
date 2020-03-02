@@ -72,6 +72,8 @@ parser.add_argument("-g", "--gpu", required=False,
                     default='1', help="gpu on which this experiment runs")
 parser.add_argument("-server", "--server", required=False,
                     default='ford', help="server on which this experiment runs")
+parser.add_argument("-asgd", "--asgd", required=False,
+                    default='False', help="server on which this experiment runs")
 args = parser.parse_args()
 args.tied = True
 
@@ -258,7 +260,7 @@ def train():
         if args.cuda:
             try:
                 torch.cuda.empty_cache()
-                print('torch cuda empty cache')
+                # print('torch cuda empty cache')
             except:
                 pass
         ####################################
@@ -301,7 +303,7 @@ try:
         if args.cuda:
             try:
                 torch.cuda.empty_cache()
-                print('torch cuda empty cache')
+                # print('torch cuda empty cache')
             except:
                 pass
         ####################################
@@ -367,12 +369,13 @@ try:
                 print('Saving model (new best validation)')
                 stored_loss = val_loss
 
-            if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (
-                    len(best_val_loss) > args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
-            # if 't0' not in optimizer.param_groups[0]:
-                print('Switching to ASGD')
-                # optimizer = ASGD(trainable_parameters, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
-                optimizer = ASGD(params, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
+            if args.asgd:
+                if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (
+                        len(best_val_loss) > args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
+                # if 't0' not in optimizer.param_groups[0]:
+                    print('Switching to ASGD')
+                    # optimizer = ASGD(trainable_parameters, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
+                    optimizer = ASGD(params, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
 
             if epoch in args.when:
                 print('Saving model before learning rate decreased')
