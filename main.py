@@ -70,11 +70,14 @@ parser.add_argument('--when', nargs="+", type=int, default=[-1],
                     help='When (which epochs) to divide the learning rate by 10 - accepts multiple')
 parser.add_argument("-g", "--gpu", required=False,
                     default='1', help="gpu on which this experiment runs")
+parser.add_argument("-server", "--server", required=False,
+                    default='ford', help="server on which this experiment runs")
 args = parser.parse_args()
 args.tied = True
 
-os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-print("\nThis experiment runs on gpu {}...\n".format(args.gpu))
+if args.server is 'ford':
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    print("\nThis experiment runs on gpu {}...\n".format(args.gpu))
 
 ###############################################################################
 print("torch:", torch.__version__)
