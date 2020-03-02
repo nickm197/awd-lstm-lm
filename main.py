@@ -73,7 +73,7 @@ parser.add_argument("-g", "--gpu", required=False,
 parser.add_argument("-server", "--server", required=False,
                     default='ford', help="server on which this experiment runs")
 parser.add_argument("-asgd", "--asgd", required=False,
-                    default='False', help="server on which this experiment runs")
+                    default='True', help="server on which this experiment runs")
 args = parser.parse_args()
 args.tied = True
 
