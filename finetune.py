@@ -10,7 +10,7 @@ import torch.nn as nn
 import data
 import model
 
-from utils import batchify, get_batch, repackage_hidden
+from utils import batchify, get_batch, repackage_hidden, logging
 from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
@@ -180,7 +180,15 @@ def train():
 
 # Load the best saved model.
 with open(os.path.join(CKPT_DIR, args.save), 'rb') as f:
-    model = torch.load(f)
+    state = torch.load(f)
+    model.state_dict() = state['model_state_dict']
+    optimizer.state_dict() = state['optimizer_state_dict']
+    vocab.__dict__ = state['vocab']
+    val_loss = state['val_loss']
+    val_ppl = state['val_ppl']
+    config = state['config']
+    epoch = state['epoch']
+    logging('val_loss',  val_loss, 'val_ppl', val_ppl, 'config',  config, 'epoch', epoch)
 
 
 # Loop over epochs.
