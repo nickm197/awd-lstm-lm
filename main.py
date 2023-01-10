@@ -150,8 +150,8 @@ ntokens = len(corpus.dictionary)
 #                       args.nlayers, args.dropout, args.dropouth,
 #                       args.dropouti, args.dropoute, args.wdrop, args.tied)
 
-model = model.LSTMModel(ntokens, args.hidden_size, args.embed_size, ntokens, args.dropout, args.num_layers, args.wdrop,
-                  args.dropouth, args.dropouti, args.dropoute, args.tie_weights).to(device)
+model = model.LSTMModel(ntokens, args.nhid, args.emsize, ntokens, args.dropout, args.nlayers, args.dropout,
+                  args.dropouth, args.dropouti, args.dropoute, args.tied).to(device)
 
 ###
 if args.resume:
