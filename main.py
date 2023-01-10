@@ -153,7 +153,7 @@ if args.resume:
     criterion = nn.CrossEntropyLoss()
 #    model, criterion, optimizer, vocab, val_loss, config, misc = model_load(args.resume)
 
-    model, criterion, optimizer, vocab, val_loss2, misc, args, epoch = model_load(args.resume)
+    model, criterion, optimizer, vocab, val_loss2, misc, args = model_load(args.resume)
 #    model, criterion, optimizer  = model_load(args.resume)
     optimizer.param_groups[0]['lr'] = args.lr
     model.dropouti, model.dropouth, model.dropout, args.dropoute = args.dropouti, args.dropouth, args.dropout, args.dropoute
