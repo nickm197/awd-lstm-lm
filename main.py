@@ -85,7 +85,7 @@ if args.server is 'ford':
 print("torch:", torch.__version__)
 if torch.__version__ != '0.1.12_2':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print("Cuda:", torch.backends.cudnn.cuda)
+    print("Cuda:", torch.backends.cudnn.cuda())
     print("CuDNN:", torch.backends.cudnn.version())
     print('device: {}'.format(device))
 ###############################################################################
@@ -100,6 +100,7 @@ if torch.cuda.is_available():
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
     else:
         torch.cuda.manual_seed(args.seed)
+        print("You have a CUDA device running")
 else:
     args.cuda = False
     print('No cuda! device is cpu :)')
