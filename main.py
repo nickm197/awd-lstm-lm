@@ -151,7 +151,7 @@ model = model.AWD(args.model, ntokens, args.emsize, args.nhid,
 if args.resume:
     logging('Resuming model ...')
     criterion = nn.CrossEntropyLoss()
-    model, criterion, optimizer, vocab, val_loss, config = model_load(args.resume)
+    model, criterion, optimizer, vocab, val_loss, config, misc = model_load(args.resume)
 #    model, criterion, optimizer  = model_load(args.resume)
     optimizer.param_groups[0]['lr'] = args.lr
     model.dropouti, model.dropouth, model.dropout, args.dropoute = args.dropouti, args.dropouth, args.dropout, args.dropoute
