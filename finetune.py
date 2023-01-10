@@ -181,9 +181,8 @@ def train():
 # Load the best saved model.
 with open(os.path.join(CKPT_DIR, args.save), 'rb') as f:
     state = torch.load(f)
-    model.state_dict() = state['model_state_dict']
-    optimizer.state_dict() = state['optimizer_state_dict']
-    vocab.__dict__ = state['vocab']
+    model.load_state_dict(state['model_state_dict'])
+    #vocab.__dict__ = state['vocab']
     val_loss = state['val_loss']
     val_ppl = state['val_ppl']
     config = state['config']
@@ -199,6 +198,7 @@ best_val_loss = []
 try:
     #optimizer = torch.optim.ASGD(model.parameters(), lr=args.lr, weight_decay=args.wdecay)
     optimizer = torch.optim.ASGD(model.parameters(), lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
+    optimizer.load_state_dict(state['optimizer_state_dict'])
     for epoch in range(1, args.epochs+1):
         epoch_start_time = time.time()
         train()
