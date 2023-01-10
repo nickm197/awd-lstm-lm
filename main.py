@@ -170,7 +170,6 @@ if args.resume:
         val_ppl = state['val_ppl']
         config = state['config']
         epoch = state['epoch']
-        logging('val_loss', val_loss, 'val_ppl', val_ppl, 'config', config, 'epoch', epoch)
 
 #    model, criterion, optimizer, vocab, val_loss2, misc, args = model_load(args.resume)
 #    model, criterion, optimizer  = model_load(args.resume)
