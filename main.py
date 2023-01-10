@@ -81,7 +81,7 @@ def logging(s, print_=True, log_=True):
     if print_:
         print(s)
     if log_:
-        with open(os.path.join(args.save, 'log.txt'), 'a+') as f_log:
+        with open(os.path.join('log.txt'), 'a+') as f_log:
             f_log.write(s + '\n')
 
 #if args.server is 'ford':
