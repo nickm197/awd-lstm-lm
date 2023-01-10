@@ -77,12 +77,6 @@ parser.add_argument("-asgd", "--asgd", required=False,
 args = parser.parse_args()
 args.tied = True
 
-def logging(s, print_=True, log_=True):
-    if print_:
-        print(s)
-    if log_:
-        with open(os.path.join(CKPT_DIR, 'log.txt'), 'a+') as f_log:
-            f_log.write(s + '\n')
 
 #if args.server is 'ford':
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu

@@ -35,3 +35,10 @@ def get_batch(source, i, args, seq_len=None, evaluation=False):
     data = source[i:i+seq_len]
     target = source[i+1:i+1+seq_len].view(-1)
     return data, target
+
+def logging(s, print_=True, log_=True):
+    if print_:
+        print(s)
+    if log_:
+        with open(os.path.join(CKPT_DIR, 'log.txt'), 'a+') as f_log:
+            f_log.write(str(s) + '\n')
