@@ -81,7 +81,7 @@ def logging(s, print_=True, log_=True):
     if print_:
         print(s)
     if log_:
-        with open(os.path.join('log.txt'), 'a+') as f_log:
+        with open(os.path.join(CKPT_DIR, 'log.txt'), 'a+') as f_log:
             f_log.write(s + '\n')
 
 #if args.server is 'ford':
@@ -150,7 +150,7 @@ ntokens = len(corpus.dictionary)
 #                       args.nlayers, args.dropout, args.dropouth,
 #                       args.dropouti, args.dropoute, args.wdrop, args.tied)
 
-model = LSTMModel(ntokens, args.hidden_size, args.embed_size, ntokens, args.dropout, args.num_layers, args.wdrop,
+model = model.LSTMModel(ntokens, args.hidden_size, args.embed_size, ntokens, args.dropout, args.num_layers, args.wdrop,
                   args.dropouth, args.dropouti, args.dropoute, args.tie_weights).to(device)
 
 ###
