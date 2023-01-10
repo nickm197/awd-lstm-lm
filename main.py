@@ -157,12 +157,12 @@ if args.resume:
     # Load the best saved model.
     with open(args.resume, 'rb') as f:
         state = torch.load(f)
-        substring = 'module.'
+        substring = '.weight_hh_l0'
         checkpoint_tmp = OrderedDict()
         for k in state['model_state_dict']:
             print(k)
-            new_k = k.replace(substring, '')
-            checkpoint_tmp[new_k] = state['model_state_dict'][k]
+            if not k.endswith(substring):
+                checkpoint_tmp[k] = state['model_state_dict'][k]
         state['model_state_dict'] = checkpoint_tmp
         model.load_state_dict(state['model_state_dict'])
         # vocab.__dict__ = state['vocab']
