@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 import math
 import numpy as np
@@ -10,6 +11,7 @@ import data
 import model
 
 from utils import batchify, get_batch, repackage_hidden
+from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='data/penn/',
@@ -177,7 +179,7 @@ def train():
 
 
 # Load the best saved model.
-with open(args.save, 'rb') as f:
+with open(os.path.join(CKPT_DIR, args.save), 'rb') as f:
     model = torch.load(f)
 
 
