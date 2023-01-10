@@ -162,10 +162,10 @@ if args.resume:
     optimizer.param_groups[0]['lr'] = args.lr
     model.dropouti, model.dropouth, model.dropout, args.dropoute = args.dropouti, args.dropouth, args.dropout, args.dropoute
 
-# Print number of parameters for comparison with other language models
-params = list(model.parameters()) + list(criterion.parameters())
-total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
-logging('Model total parameters:', total_params)
+    # Print number of parameters for comparison with other language models
+    params = list(model.parameters()) + list(criterion.parameters())
+    total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
+    logging('Model total parameters:', total_params)
 
     if args.wdrop:
         from weight_drop import WeightDrop
