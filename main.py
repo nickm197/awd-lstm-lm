@@ -153,9 +153,21 @@ if args.resume:
     criterion = nn.CrossEntropyLoss()
 #    model, criterion, optimizer, vocab, val_loss, config, misc = model_load(args.resume)
 
-    model, criterion, optimizer, vocab, val_loss2, misc, args = model_load(args.resume)
+    # Load the best saved model.
+    with open(args.resume, 'rb') as f:
+        state = torch.load(f)
+        model.load_state_dict(state['model_state_dict'])
+        # vocab.__dict__ = state['vocab']
+        val_loss = state['val_loss']
+        val_ppl = state['val_ppl']
+        config = state['config']
+        epoch = state['epoch']
+        logging('val_loss', val_loss, 'val_ppl', val_ppl, 'config', config, 'epoch', epoch)
+
+#    model, criterion, optimizer, vocab, val_loss2, misc, args = model_load(args.resume)
 #    model, criterion, optimizer  = model_load(args.resume)
-    optimizer.param_groups[0]['lr'] = args.lr
+    #optimizer.param_groups[0]['lr'] = args.lr
+    optimizer.load_state_dict(state['optimizer_state_dict'])
     model.dropouti, model.dropouth, model.dropout, args.dropoute = args.dropouti, args.dropouth, args.dropout, args.dropoute
 
     # Print number of parameters for comparison with other language models
