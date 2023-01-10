@@ -101,6 +101,15 @@ total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[
 print('Args:', args)
 print('Model total parameters:', total_params)
 
+if args.wdrop:
+    from weight_drop import WeightDrop
+
+    for rnn in model.rnns:
+        if type(rnn) == WeightDrop:
+            rnn.dropout = args.wdrop
+        elif rnn.zoneout > 0:
+            rnn.zoneout = args.wdrop
+
 criterion = nn.CrossEntropyLoss()
 
 ###############################################################################
@@ -188,7 +197,6 @@ with open(os.path.join(CKPT_DIR, args.save), 'rb') as f:
     config = state['config']
     epoch = state['epoch']
     logging('val_loss',  val_loss, 'val_ppl', val_ppl, 'config',  config, 'epoch', epoch)
-
 
 # Loop over epochs.
 lr = args.lr
