@@ -174,7 +174,7 @@ if args.resume:
 #    model, criterion, optimizer, vocab, val_loss2, misc, args = model_load(args.resume)
 #    model, criterion, optimizer  = model_load(args.resume)
     #optimizer.param_groups[0]['lr'] = args.lr
-    optimizer.load_state_dict(state['optimizer_state_dict'])
+    #optimizer.load_state_dict(state['optimizer_state_dict'])
     model.dropouti, model.dropouth, model.dropout, args.dropoute = args.dropouti, args.dropouth, args.dropout, args.dropoute
 
     # Print number of parameters for comparison with other language models
@@ -314,6 +314,9 @@ try:
         optimizer = torch.optim.SGD(params, lr=args.lr, weight_decay=args.wdecay)  # params not trainable params... (?)
     if args.optimizer == 'adam':
         optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.wdecay)
+    if args.resume:
+        optimizer.load_state_dict(state['optimizer_state_dict'])
+        optimizer.param_groups[0]['lr'] = args.lr
 
     for epoch in range(1, args.epochs+1):
         logging('Starting epoch {}'.format(epoch))
