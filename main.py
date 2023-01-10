@@ -159,11 +159,11 @@ if args.resume:
         state = torch.load(f)
         substring = 'module.'
         checkpoint_tmp = OrderedDict()
-        for k in state:
+        for k in state['model_state_dict']:
             print(k)
-            new_k = k[len(substring):] if k.startswith(substring) else k
-            checkpoint_tmp[new_k] = state[k]
-        state = checkpoint_tmp
+            new_k = k.replace(substring, '')
+            checkpoint_tmp[new_k] = state['model_state_dict'][k]
+        state['model_state_dict'] = checkpoint_tmp
         model.load_state_dict(state['model_state_dict'])
         # vocab.__dict__ = state['vocab']
         val_loss = state['val_loss']
