@@ -1,5 +1,6 @@
 import torch
 import os
+from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 
 def repackage_hidden(h):

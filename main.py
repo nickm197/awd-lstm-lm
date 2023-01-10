@@ -12,7 +12,7 @@ from asgd import ASGD
 from model_save import model_load, model_save, model_state_save
 from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
-from utils import batchify, get_batch, repackage_hidden#, logging
+from utils import batchify, get_batch, repackage_hidden, logging
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='data/wikitext-2',
