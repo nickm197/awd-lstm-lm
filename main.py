@@ -162,7 +162,7 @@ if args.resume:
         for k in state:
             print(k)
             new_k = k[len(substring):] if k.startswith(substring) else k
-            checkpoint_tmp[new_k] = checkpoint[k]
+            checkpoint_tmp[new_k] = state[k]
         state = checkpoint_tmp
         model.load_state_dict(state['model_state_dict'])
         # vocab.__dict__ = state['vocab']
