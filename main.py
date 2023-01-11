@@ -178,7 +178,7 @@ if args.resume:
     # Print number of parameters for comparison with other language models
     params = list(model.parameters()) + list(criterion.parameters())
     total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
-    logging('Model total parameters:'.format(total_params))
+    logging('Model total parameters: {}'.format(total_params))
 
     if args.wdrop:
         from weight_drop import WeightDrop
@@ -210,8 +210,8 @@ if args.cuda:
 params = list(model.parameters()) + list(criterion.parameters())
 trainable_parameters = [p for p in model.parameters() if p.requires_grad]
 total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
-logging('Args:'.format(args))
-logging('Model total parameters:'.format(total_params))
+logging('Args: {}'.format(args))
+logging('Model total parameters: {}'.format(total_params))
 
 
 ###############################################################################
