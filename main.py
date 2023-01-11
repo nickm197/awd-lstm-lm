@@ -310,19 +310,19 @@ try:
         epoch_start_time = time.time()
         ####################################
         # memory debug
-        logging('Memory before train')
-        if args.cuda:
-            logging(torch.cuda.get_device_properties(device).total_memory)
-            logging(torch.cuda.memory_cached(device))
-            logging(torch.cuda.memory_allocated(device))
+        #logging('Memory before train')
+        #if args.cuda:
+        #    print(torch.cuda.get_device_properties(device).total_memory)
+        #    print(torch.cuda.memory_cached(device))
+        #    print(torch.cuda.memory_allocated(device))
         ####################################
         train()
         ####################################
-        logging('Memory after train')
-        if args.cuda:
-            logging(torch.cuda.get_device_properties(device).total_memory)
-            logging(torch.cuda.memory_cached(device))
-            logging(torch.cuda.memory_allocated(device))
+        #logging('Memory after train')
+        #if args.cuda:
+        #    print(torch.cuda.get_device_properties(device).total_memory)
+        #    print(torch.cuda.memory_cached(device))
+        #    print(torch.cuda.memory_allocated(device))
         ####################################
         if args.cuda:
             try:
