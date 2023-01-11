@@ -1,5 +1,4 @@
 import argparse
-import os
 import time
 import math
 import numpy as np
@@ -10,8 +9,7 @@ import torch.nn as nn
 import data
 import model
 
-from utils import batchify, get_batch, repackage_hidden, logging
-from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
+from utils import batchify, get_batch, repackage_hidden
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='data/penn/',
@@ -90,25 +88,12 @@ test_data = batchify(corpus.test, test_batch_size, args)
 ###############################################################################
 
 ntokens = len(corpus.dictionary)
-model = model.AWD(args.model, ntokens, args.emsize, args.nhid,
-                       args.nlayers, args.dropout, args.dropouth,
-                       args.dropouti, args.dropoute, args.wdrop, args.tied)
-
-#model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth, args.dropouti, args.dropoute, args.wdrop, args.tied)
+model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth, args.dropouti, args.dropoute, args.wdrop, args.tied)
 if args.cuda:
     model.cuda()
 total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in model.parameters())
 print('Args:', args)
 print('Model total parameters:', total_params)
-
-if args.wdrop:
-    from weight_drop import WeightDrop
-
-    for rnn in model.rnns:
-        if type(rnn) == WeightDrop:
-            rnn.dropout = args.wdrop
-        elif rnn.zoneout > 0:
-            rnn.zoneout = args.wdrop
 
 criterion = nn.CrossEntropyLoss()
 
@@ -188,15 +173,9 @@ def train():
 
 
 # Load the best saved model.
-with open(os.path.join(CKPT_DIR, args.save), 'rb') as f:
-    state = torch.load(f)
-    model.load_state_dict(state['model_state_dict'])
-    #vocab.__dict__ = state['vocab']
-    val_loss = state['val_loss']
-    val_ppl = state['val_ppl']
-    config = state['config']
-    epoch = state['epoch']
-    logging('val_loss',  val_loss, 'val_ppl', val_ppl, 'config',  config, 'epoch', epoch)
+with open(args.save, 'rb') as f:
+    model = torch.load(f)
+
 
 # Loop over epochs.
 lr = args.lr
@@ -206,7 +185,6 @@ best_val_loss = []
 try:
     #optimizer = torch.optim.ASGD(model.parameters(), lr=args.lr, weight_decay=args.wdecay)
     optimizer = torch.optim.ASGD(model.parameters(), lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
-    optimizer.load_state_dict(state['optimizer_state_dict'])
     for epoch in range(1, args.epochs+1):
         epoch_start_time = time.time()
         train()
