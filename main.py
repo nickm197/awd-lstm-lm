@@ -78,17 +78,16 @@ parser.add_argument("-asgd", "--asgd", required=False,
 args = parser.parse_args()
 args.tied = True
 
-
 #if args.server is 'ford':
-os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-logging("\nThis experiment runs on gpu {}...\n".format(args.gpu))
+#os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+#logging("\nThis experiment runs on gpu {}...\n".format(args.gpu))
 
 ###############################################################################
-logging("torch:", torch.__version__)
+logging("torch: {}".format(torch.__version__))
 if torch.__version__ != '0.1.12_2':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #    print("Cuda:", torch.backends.cudnn.cuda())
-    logging("CuDNN:", torch.backends.cudnn.version())
+    logging("CuDNN: {}".format(torch.backends.cudnn.version()))
     logging('device: {}'.format(device))
 ###############################################################################
 global model, criterion, optimizer
@@ -348,7 +347,7 @@ try:
             for prm in model.parameters():
                 if prm in optimizer.state.keys():
                     # tmp[prm] = prm.data.clone()
-                    tmp[prm] = prm.data.detach()
+                    # tmp[prm] = prm.data.detach()
                     # tmp[prm].copy_(prm.data)
                     # if 'ax' in optimizer.state[prm]:  # added this line because of error: File "main.py", line 268, in <module> prm.data = optimizer.state[prm]['ax'].clone() KeyError: 'ax'
                     # prm.data = optimizer.state[prm]['ax'].clone()
