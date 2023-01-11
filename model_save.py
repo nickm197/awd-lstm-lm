@@ -25,6 +25,7 @@ def model_state_save(fn, model, criterion, optimizer, vocab=None,
     :return:
     """
     state = {'model_state_dict': model.state_dict(),
+             'criterion_state_dict': criterion.state_dict(),
              'optimizer_state_dict': optimizer.state_dict(), 'vocab': vocab.__dict__,
              'val_loss': val_loss, 'val_ppl': val_ppl,
              'config': config, 'epoch': epoch}
