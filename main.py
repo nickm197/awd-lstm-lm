@@ -296,7 +296,7 @@ logging('Starting training......')
 try:
     #optimizer = None
     # Ensure the optimizer is optimizing params, which includes both the model's weights as well as the criterion's weight (i.e. Adaptive Softmax)
-    if not optimizer: # That is if we have not loaded it from a saved state
+    if optimizer not in globals(): # That is if we have not loaded it from a saved state
         if args.optimizer == 'sgd':
             optimizer = torch.optim.SGD(params, lr=args.lr, weight_decay=args.wdecay)  # params not trainable params... (?)
         if args.optimizer == 'adam':
