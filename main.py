@@ -159,12 +159,10 @@ if args.resume:
         substring = '.weight_hh_l0'
         checkpoint_tmp = OrderedDict()
         for k in state['model_state_dict']:
-            print(k)
             if not k.endswith(substring):
                 checkpoint_tmp[k] = state['model_state_dict'][k]
         state['model_state_dict'] = checkpoint_tmp
         model.load_state_dict(state['model_state_dict'])
-        optimizer.load_state_dict(state['optimizer_state_dict'])
         # vocab.__dict__ = state['vocab']
         val_loss = state['val_loss']
         val_ppl = state['val_ppl']
@@ -176,12 +174,6 @@ if args.resume:
     #optimizer.param_groups[0]['lr'] = args.lr
     #optimizer.load_state_dict(state['optimizer_state_dict'])
     model.dropouti, model.dropouth, model.dropout, args.dropoute = args.dropouti, args.dropouth, args.dropout, args.dropoute
-
-    # Print number of parameters for comparison with other language models
-    params = list(model.parameters()) + list(criterion.parameters())
-    total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
-    logging('Model total parameters: {}'.format(total_params))
-
     if args.wdrop:
         from weight_drop import WeightDrop
 
@@ -264,7 +256,7 @@ def train():
         optimizer.zero_grad()
 
         output, hidden, rnn_hs, dropped_rnn_hs = model(data, hidden, return_h=True)
-        raw_loss = criterion(model.decoder.weight, model.decoder.bias, output, targets).data
+        raw_loss = criterion(model.decoder.weight, model.decoder.bias, output, targets)#.data
 
         loss = raw_loss
         # Activation Regularization
@@ -352,7 +344,7 @@ try:
             for prm in model.parameters():
                 if prm in optimizer.state.keys():
                     # tmp[prm] = prm.data.clone()
-                    # tmp[prm] = prm.data.detach()
+                    tmp[prm] = prm.data.detach()
                     # tmp[prm].copy_(prm.data)
                     # if 'ax' in optimizer.state[prm]:  # added this line because of error: File "main.py", line 268, in <module> prm.data = optimizer.state[prm]['ax'].clone() KeyError: 'ax'
                     # prm.data = optimizer.state[prm]['ax'].clone()
