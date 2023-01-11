@@ -194,11 +194,15 @@ if not criterion:
         # This produces fairly even matrix mults for the buckets:
         # 0: 11723136, 1: 10854630, 2: 11270961, 3: 11219422
         splits = [4200, 35000, 180000]
+        logging('Using splits {}'.format(splits))
+        criterion = nn.SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
     elif ntokens > 75000:
         # WikiText-103
         splits = [2800, 20000, 76000]
-    logging('Using splits {}'.format(splits))
-    criterion = nn.SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
+        logging('Using splits {}'.format(splits))
+        criterion = nn.SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
+    else:
+        criterion = nn.CrossEntropyLoss()
 
 # if torch.__version__ != '0.1.12_2':
 #     print([(name, p.device) for name, p in model.named_parameters()])
