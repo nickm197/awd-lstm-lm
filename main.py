@@ -82,6 +82,14 @@ args.tied = True
 #    print("\nThis experiment runs on gpu {}...\n".format(args.gpu))
 
 ###############################################################################
+
+def logging(s, print_=True, log_=True):
+    if print_:
+        print(s)
+    if log_:
+        with open(os.path.join(CKPT_DIR, 'log.txt'), 'a+') as f_log:
+            f_log.write(s + '\n')
+
 logging("torch: {}".format(torch.__version__))
 #if torch.__version__ != '0.1.12_2':
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -117,12 +125,6 @@ def model_load(fn):
     with open(fn, 'rb') as f:
         model, criterion, optimizer = torch.load(f)
 
-def logging(s, print_=True, log_=True):
-    if print_:
-        print(s)
-    if log_:
-        with open(os.path.join(CKPT_DIR, 'log.txt'), 'a+') as f_log:
-            f_log.write(s + '\n')
 
 logging('Base directory: {}'.format(BASE_DIR))
 # fn = 'corpus.{}.data'.format(hashlib.md5(args.data.encode()).hexdigest())
