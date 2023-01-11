@@ -158,6 +158,8 @@ if args.resume:
         state = torch.load(f)
         substring = '.weight_hh_l0'
         checkpoint_tmp = OrderedDict()
+        for k in state:
+            print(k)
         for k in state['model_state_dict']:
             if not k.endswith(substring):
                 checkpoint_tmp[k] = state['model_state_dict'][k]
@@ -216,7 +218,6 @@ trainable_parameters = [p for p in model.parameters() if p.requires_grad]
 total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
 logging('Args: {}'.format(args))
 logging('Model total parameters: {}'.format(total_params))
-
 
 ###############################################################################
 # Training code
