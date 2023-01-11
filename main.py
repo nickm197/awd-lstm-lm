@@ -12,8 +12,6 @@ from asgd import ASGD
 #from model_save import model_load, model_save, model_state_save
 from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-
 from utils import batchify, get_batch, repackage_hidden
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
@@ -160,8 +158,7 @@ if args.resume:
     print('Resuming model ...')
     #model, criterion, optimizer, vocab, val_loss, val_ppl, config, epoch = model_load(args.resume)
     model_load(args.resume)
-    scheduler = ReduceLROnPlateau(optimizer, 'min')
-    #optimizer.param_groups[0]['lr'] = args.lr
+    optimizer.param_groups[0]['lr'] = args.lr
     model.dropouti, model.dropouth, model.dropout, args.dropoute = args.dropouti, args.dropouth, args.dropout, args.dropoute
     if args.wdrop:
         from weight_drop import WeightDrop
@@ -297,7 +294,7 @@ try:
             optimizer = torch.optim.SGD(params, lr=args.lr, weight_decay=args.wdecay)  # params not trainable params... (?)
         if args.optimizer == 'adam':
             optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.wdecay)
-        scheduler = ReduceLROnPlateau(optimizer, 'min')
+        #scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     for epoch in range(1, args.epochs+1):
         print('Starting epoch {}'.format(epoch))
@@ -344,7 +341,7 @@ try:
                     # prm.data.copy_(optimizer.state[prm]['ax'])
 
             val_loss2 = evaluate(val_data)
-            scheduler.step(val_loss2)
+            #scheduler.step(val_loss2)
             print('-' * 89)
             print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
                   'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
@@ -378,7 +375,7 @@ try:
                   'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
                 epoch, (time.time() - epoch_start_time), val_loss, math.exp(val_loss), val_loss / math.log(2)))
             print('-' * 89)
-            scheduler.step(val_loss)
+            #scheduler.step(val_loss)
 
             if val_loss < stored_loss:
                 model_save(os.path.join(CKPT_DIR, args.save))
@@ -395,13 +392,20 @@ try:
                     # optimizer = ASGD(trainable_parameters, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
                     optimizer = ASGD(params, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
 
-            #if epoch in args.when:
-            #    print('Saving model before learning rate decreased')
-            #    model_save(os.path.join(CKPT_DIR, args.save))
-            #    # model_state_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), args.save), model, criterion, optimizer,
-            #    #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
-            #    print('Dividing learning rate by 10')
-            #    optimizer.param_groups[0]['lr'] /= 10.
+            if epoch in args.when:
+                print('Saving model before learning rate decreased')
+                model_save(os.path.join(CKPT_DIR, args.save))
+                # model_state_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), args.save), model, criterion, optimizer,
+                #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
+                print('Dividing learning rate by 10')
+                optimizer.param_groups[0]['lr'] /= 10.
+            if epoch in args.when:
+                print('Saving model before learning rate decreased')
+                model_save(os.path.join(CKPT_DIR, args.save))
+                # model_state_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), args.save), model, criterion, optimizer,
+                #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
+                print('Dividing learning rate by 10')
+                optimizer.param_groups[0]['lr'] /= 10.
 
             best_val_loss.append(val_loss)
 
