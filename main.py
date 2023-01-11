@@ -158,13 +158,13 @@ if args.resume:
         state = torch.load(f)
         substring = '.weight_hh_l0'
         checkpoint_tmp = OrderedDict()
-        for k in state:
-            print(k)
         for k in state['model_state_dict']:
+            print(k)
             if not k.endswith(substring):
                 checkpoint_tmp[k] = state['model_state_dict'][k]
         state['model_state_dict'] = checkpoint_tmp
         model.load_state_dict(state['model_state_dict'])
+        optimizer.load_state_dict(state['optimizer_state_dict'])
         # vocab.__dict__ = state['vocab']
         val_loss = state['val_loss']
         val_ppl = state['val_ppl']
