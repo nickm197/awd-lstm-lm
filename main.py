@@ -82,12 +82,12 @@ args.tied = True
 #    print("\nThis experiment runs on gpu {}...\n".format(args.gpu))
 
 ###############################################################################
-print("torch:", torch.__version__)
+logging("torch: {}".format(torch.__version__))
 #if torch.__version__ != '0.1.12_2':
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #    print("Cuda:", torch.backends.cudnn.cuda)
-print("CuDNN:", torch.backends.cudnn.version())
-print('device: {}'.format(device))
+logging("CuDNN: {}".format(torch.backends.cudnn.version()))
+logging('device: {}'.format(device))
 ###############################################################################
 #global model, criterion, optimizer
 
@@ -108,7 +108,6 @@ else:
 # Load data
 ###############################################################################
 
-
 def model_save(fn):
     with open(fn, 'wb') as f:
         torch.save([model, criterion, optimizer], f)
@@ -118,17 +117,24 @@ def model_load(fn):
     with open(fn, 'rb') as f:
         model, criterion, optimizer = torch.load(f)
 
-print('Base directory: {}'.format(BASE_DIR))
+def logging(s, print_=True, log_=True):
+    if print_:
+        print(s)
+    if log_:
+        with open(os.path.join(CKPT_DIR, 'log.txt'), 'a+') as f_log:
+            f_log.write(s + '\n')
+
+logging('Base directory: {}'.format(BASE_DIR))
 # fn = 'corpus.{}.data'.format(hashlib.md5(args.data.encode()).hexdigest())
 fn = 'corpus.{}'.format(args.data)
 fn = fn.replace('data/', '').replace('wikitext-2', 'wt2')
 
 fn_path = os.path.join(CACHE_DIR, fn)
 if os.path.exists(fn_path):
-    print('Loading cached dataset...')
+    logging('Loading cached dataset...')
     corpus = torch.load(fn_path)
 else:
-    print('Producing dataset...')
+    logging('Producing dataset...')
     datapath = os.path.join(BASE_DIR, args.data)
     corpus = data.Corpus(datapath)
     torch.save(corpus, fn_path)
@@ -155,7 +161,7 @@ model = model.AWD(args.model, ntokens, args.emsize, args.nhid,
 
 ###
 if args.resume:
-    print('Resuming model ...')
+    logging('Resuming model ...')
     #model, criterion, optimizer, vocab, val_loss, val_ppl, config, epoch = model_load(args.resume)
     model_load(args.resume)
     optimizer.param_groups[0]['lr'] = args.lr
@@ -177,7 +183,7 @@ if not criterion:
     elif ntokens > 75000:
         # WikiText-103
         splits = [2800, 20000, 76000]
-    print('Using splits {}'.format(splits))
+    logging('Using splits {}'.format(splits))
     criterion = SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
 
 # if torch.__version__ != '0.1.12_2':
@@ -190,8 +196,8 @@ if args.cuda:
 params = list(model.parameters()) + list(criterion.parameters())
 trainable_parameters = [p for p in model.parameters() if p.requires_grad]
 total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
-print('Args:', args)
-print('Model total parameters:', total_params)
+logging('Args: {}'.format(args))
+logging('Model total parameters: {}'.format(total_params))
 
 
 ###############################################################################
@@ -220,6 +226,7 @@ def train():
     start_time = time.time()
     ntokens = len(corpus.dictionary)
     hidden = model.init_hidden(args.batch_size)
+    model.train()
     batch, i = 0, 0
     while i < train_data.size(0) - 1 - 1:
         bptt = args.bptt if np.random.random() < 0.95 else args.bptt / 2.
@@ -230,7 +237,6 @@ def train():
 
         lr2 = optimizer.param_groups[0]['lr']
         optimizer.param_groups[0]['lr'] = lr2 * seq_len / args.bptt
-        model.train()
         data, targets = get_batch(train_data, i, args, seq_len=seq_len)
 
         # Starting each batch, we detach the hidden state from how it was previously produced.
@@ -258,7 +264,7 @@ def train():
         if batch % args.log_interval == 0 and batch > 0:
             cur_loss = total_loss / args.log_interval
             elapsed = time.time() - start_time
-            print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:05.5f} | ms/batch {:5.2f} | '
+            logging('| epoch {:3d} | {:5d}/{:5d} batches | lr {:05.5f} | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f} | bpc {:8.3f}'.format(
                 epoch, batch, len(train_data) // args.bptt, optimizer.param_groups[0]['lr'],
                               elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss), cur_loss / math.log(2)))
@@ -283,13 +289,12 @@ lr = args.lr
 best_val_loss = []
 stored_loss = 100000000
 
-print('Starting training......')
+logging('Starting training......')
 # At any point you can hit Ctrl + C to break out of training early.
 try:
     #optimizer = None
     # Ensure the optimizer is optimizing params, which includes both the model's weights as well as the criterion's weight (i.e. Adaptive Softmax)
-    print(optimizer)
-    if not optimizer:
+    if not optimizer: # That is if we have not loaded it from a saved state
         if args.optimizer == 'sgd':
             optimizer = torch.optim.SGD(params, lr=args.lr, weight_decay=args.wdecay)  # params not trainable params... (?)
         if args.optimizer == 'adam':
@@ -297,23 +302,23 @@ try:
         #scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     for epoch in range(1, args.epochs+1):
-        print('Starting epoch {}'.format(epoch))
+        logging('Starting epoch {}'.format(epoch))
         epoch_start_time = time.time()
         ####################################
         # memory debug
-        print('Memory before train')
+        logging('Memory before train')
         if args.cuda:
-            print(torch.cuda.get_device_properties(device).total_memory)
-            print(torch.cuda.memory_cached(device))
-            print(torch.cuda.memory_allocated(device))
+            logging(torch.cuda.get_device_properties(device).total_memory)
+            logging(torch.cuda.memory_cached(device))
+            logging(torch.cuda.memory_allocated(device))
         ####################################
         train()
         ####################################
-        print('Memory after train')
+        logging('Memory after train')
         if args.cuda:
-            print(torch.cuda.get_device_properties(device).total_memory)
-            print(torch.cuda.memory_cached(device))
-            print(torch.cuda.memory_allocated(device))
+            logging(torch.cuda.get_device_properties(device).total_memory)
+            logging(torch.cuda.memory_cached(device))
+            logging(torch.cuda.memory_allocated(device))
         ####################################
         if args.cuda:
             try:
@@ -342,17 +347,17 @@ try:
 
             val_loss2 = evaluate(val_data)
             #scheduler.step(val_loss2)
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+            logging('-' * 89)
+            logging('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
                   'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
                 epoch, (time.time() - epoch_start_time), val_loss2, math.exp(val_loss2), val_loss2 / math.log(2)))
-            print('-' * 89)
+            logging('-' * 89)
 
             if val_loss2 < stored_loss:
                 model_save(os.path.join(CKPT_DIR, args.save))
                 # model_state_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
                 #            vocabulary, val_loss2, math.exp(val_loss2), vars(args), epoch)
-                print('Saving Averaged!')
+                logging('Saving Averaged!')
                 stored_loss = val_loss2
 
             # nparams = 0
@@ -367,58 +372,51 @@ try:
             # print('params {}, params in tmp keys: {}'.format(nparams, nparams_in_temp_keys))
             del tmp
         else:
-            print('{} model params (SGD before eval)'.format(len([prm for prm in model.parameters()])))
+            logging('{} model params (SGD before eval)'.format(len([prm for prm in model.parameters()])))
             val_loss = evaluate(val_data, eval_batch_size)
-            print('{} model params (SGD after eval)'.format(len([prm for prm in model.parameters()])))
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+            logging('{} model params (SGD after eval)'.format(len([prm for prm in model.parameters()])))
+            logging('-' * 89)
+            logging('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
                   'valid ppl {:8.2f} | valid bpc {:8.3f}'.format(
                 epoch, (time.time() - epoch_start_time), val_loss, math.exp(val_loss), val_loss / math.log(2)))
-            print('-' * 89)
+            logging('-' * 89)
             #scheduler.step(val_loss)
 
             if val_loss < stored_loss:
                 model_save(os.path.join(CKPT_DIR, args.save))
                 # model_state_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
                 #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
-                print('Saving model (new best validation)')
+                logging('Saving model (new best validation)')
                 stored_loss = val_loss
 
             if args.asgd:
                 if args.optimizer == 'sgd' and 't0' not in optimizer.param_groups[0] and (
                         len(best_val_loss) > args.nonmono and val_loss > min(best_val_loss[:-args.nonmono])):
                 # if 't0' not in optimizer.param_groups[0]:
-                    print('Switching to ASGD')
+                    logging('Switching to ASGD')
                     # optimizer = ASGD(trainable_parameters, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
                     optimizer = ASGD(params, lr=args.lr, t0=0, lambd=0., weight_decay=args.wdecay)
 
             if epoch in args.when:
-                print('Saving model before learning rate decreased')
+                logging('Saving model before learning rate decreased')
                 model_save(os.path.join(CKPT_DIR, args.save))
                 # model_state_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), args.save), model, criterion, optimizer,
                 #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
-                print('Dividing learning rate by 10')
-                optimizer.param_groups[0]['lr'] /= 10.
-            if epoch in args.when:
-                print('Saving model before learning rate decreased')
-                model_save(os.path.join(CKPT_DIR, args.save))
-                # model_state_save('{}.e{}'.format(os.path.join(CKPT_DIR, args.save), args.save), model, criterion, optimizer,
-                #            vocabulary, val_loss, math.exp(val_loss), vars(args), epoch)
-                print('Dividing learning rate by 10')
+                logging('Dividing learning rate by 10')
                 optimizer.param_groups[0]['lr'] /= 10.
 
             best_val_loss.append(val_loss)
 
 except KeyboardInterrupt:
-    print('-' * 89)
-    print('Exiting from training early')
+    logging('-' * 89)
+    logging('Exiting from training early')
 
 # Load the best saved model.
 model_load(os.path.join(CKPT_DIR, args.save))
 
 # Run on test data.
 test_loss = evaluate(test_data, test_batch_size)
-print('=' * 89)
-print('| End of training | test loss {:5.2f} | test ppl {:8.2f} | test bpc {:8.3f}'.format(
+logging('=' * 89)
+logging('| End of training | test loss {:5.2f} | test ppl {:8.2f} | test bpc {:8.3f}'.format(
     test_loss, math.exp(test_loss), test_loss / math.log(2)))
-print('=' * 89)
+logging('=' * 89)
