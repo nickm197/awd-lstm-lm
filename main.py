@@ -160,7 +160,6 @@ if args.resume:
         substring = '.weight_hh_l0'
         checkpoint_tmp = OrderedDict()
         for k in state['model_state_dict']:
-            print(k)
             if not k.endswith(substring):
                 checkpoint_tmp[k] = state['model_state_dict'][k]
         state['model_state_dict'] = checkpoint_tmp
@@ -180,7 +179,7 @@ if args.resume:
     # Print number of parameters for comparison with other language models
     params = list(model.parameters()) + list(criterion.parameters())
     total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
-    logging('Model total parameters:', total_params)
+    logging('Model total parameters:'.format(total_params))
 
     if args.wdrop:
         from weight_drop import WeightDrop
@@ -200,7 +199,7 @@ if not criterion:
         # WikiText-103
         splits = [2800, 20000, 76000]
     logging('Using splits {}'.format(splits))
-    criterion = SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
+    criterion = nn.SplitCrossEntropyLoss(args.emsize, splits=splits, verbose=False)
 
 # if torch.__version__ != '0.1.12_2':
 #     print([(name, p.device) for name, p in model.named_parameters()])
@@ -212,8 +211,8 @@ if args.cuda:
 params = list(model.parameters()) + list(criterion.parameters())
 trainable_parameters = [p for p in model.parameters() if p.requires_grad]
 total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in params if x.size())
-logging('Args:', args)
-logging('Model total parameters:', total_params)
+logging('Args:'.format(args))
+logging('Model total parameters:'.format(total_params))
 
 
 ###############################################################################
