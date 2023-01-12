@@ -219,12 +219,21 @@ try:
     for epoch in range(1, args.epochs+1):
         epoch_start_time = time.time()
         train()
+        ####################################
+        if args.cuda:
+            try:
+                torch.cuda.empty_cache()
+                # print('torch cuda empty cache')
+            except:
+                pass
+        ####################################
         if 't0' in optimizer.param_groups[0]:
             tmp = {}
             for prm in model.parameters():
                 #tmp[prm] = prm.data.clone()
                 tmp[prm] = prm.data.detach()
                 #prm.data = optimizer.state[prm]['ax'].clone()
+                print(optimizer.state[prm])
                 prm.data = optimizer.state[prm]['ax'].detach()
 
             val_loss2 = evaluate(val_data)
