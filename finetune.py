@@ -237,7 +237,7 @@ try:
                 try:
                     prm.data = optimizer.state[prm]['ax'].detach()
                 except:
-                    print(prm)
+                    #print(prm)
                     pass
 
             val_loss2 = evaluate(val_data)
@@ -255,7 +255,10 @@ try:
                 stored_loss = val_loss2
 
             for prm in model.parameters():
-                prm.data = tmp[prm].clone()
+                try:
+                    prm.data = tmp[prm].clone()
+                except:
+                    pass
 
         if (len(best_val_loss)>args.nonmono and val_loss2 > min(best_val_loss[:-args.nonmono])):
             print('Done!')
