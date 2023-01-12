@@ -3,7 +3,6 @@ import os
 import time
 import math
 import numpy as np
-np.random.seed(331)
 import torch
 import torch.nn as nn
 
@@ -72,6 +71,7 @@ def logging(s, print_=True, log_=True):
             f_log.write(s + '\n')
 
 # Set the random seed manually for reproducibility.
+np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 if torch.cuda.is_available():
     if not args.cuda:
