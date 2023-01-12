@@ -10,6 +10,7 @@ import data
 import model
 
 from utils import batchify, get_batch, repackage_hidden
+from sys_config import BASE_DIR, CKPT_DIR, CACHE_DIR
 
 parser = argparse.ArgumentParser(description='PyTorch PennTreeBank RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='data/penn/',
