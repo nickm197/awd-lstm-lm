@@ -234,7 +234,11 @@ try:
                 tmp[prm] = prm.data.detach()
                 #prm.data = optimizer.state[prm]['ax'].clone()
                 #print(optimizer.state[prm])
-                prm.data = optimizer.state[prm][0]['ax'].detach()
+                try:
+                    prm.data = optimizer.state[prm]['ax'].detach()
+                except:
+                    print(prm)
+                    pass
 
             val_loss2 = evaluate(val_data)
             logging('-' * 89)
