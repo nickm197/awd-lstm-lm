@@ -204,14 +204,17 @@ def train():
         ####################################
 
 
-# Load the best saved model.
+# Load the best saved model and log and store its val loss
 model_load(os.path.join(CKPT_DIR, args.save))
+lr = args.lr
+stored_loss = evaluate(val_data)
+logging('-' * 89)
+logging('Starting with stored model validation loss {}'.format(stored_loss))
+logging('-' * 89)
+best_val_loss = []
 
 
 # Loop over epochs.
-lr = args.lr
-stored_loss = evaluate(val_data)
-best_val_loss = []
 # At any point you can hit Ctrl + C to break out of training early.
 try:
     #optimizer = torch.optim.ASGD(model.parameters(), lr=args.lr, weight_decay=args.wdecay)
@@ -275,7 +278,15 @@ except KeyboardInterrupt:
 # Load the best saved model.
 #with open(args.save, 'rb') as f:
 #    model = torch.load(f)
-model_load(os.path.join(CKPT_DIR, 'asgd_finetune_'+args.save))
+try:
+    model_load(os.path.join(CKPT_DIR, 'asgd_finetune_'+args.save))
+except:
+    model_load(os.path.join(CKPT_DIR, args.save))
+    logging('-' * 89)
+    logging('No improvement in the validation loss :(')
+    val_loss = evaluate(val_data)
+    logging('Validation loss is still {}'.format(val_loss))
+    logging('-' * 89)
 
 # Run on test data.
 test_loss = evaluate(test_data, test_batch_size)
