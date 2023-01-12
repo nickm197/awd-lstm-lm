@@ -258,10 +258,12 @@ try:
                 stored_loss = val_loss2
 
             for prm in model.parameters():
-                try:
-                    prm.data = tmp[prm].clone()
-                except:
-                    pass
+                # nparams += 1
+                if prm in tmp.keys():
+                    # nparams_in_temp_keys += 1
+                    # prm.data = tmp[prm].clone()
+                    prm.data = tmp[prm].detach()
+                    prm.requires_grad = True
 
         if (len(best_val_loss)>args.nonmono and val_loss2 > min(best_val_loss[:-args.nonmono])):
             print('Done!')
