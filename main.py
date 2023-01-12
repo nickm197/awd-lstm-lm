@@ -358,7 +358,7 @@ try:
             logging('-' * 89)
 
             if val_loss2 < stored_loss:
-                model_save(os.path.join(CKPT_DIR, args.save))
+                model_save(os.path.join(CKPT_DIR, 'asgd'+args.save))
                 # model_state_save(os.path.join(CKPT_DIR, args.save), model, criterion, optimizer,
                 #            vocabulary, val_loss2, math.exp(val_loss2), vars(args), epoch)
                 logging('Saving Averaged!')
