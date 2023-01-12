@@ -63,6 +63,13 @@ parser.add_argument('--wdecay', type=float, default=1.2e-6,
                     help='weight decay applied to all weights')
 args = parser.parse_args()
 
+def logging(s, print_=True, log_=True):
+    if print_:
+        print(s)
+    if log_:
+        with open(os.path.join(CKPT_DIR, 'finetune_log.txt'), 'a+') as f_log:
+            f_log.write(s + '\n')
+
 # Set the random seed manually for reproducibility.
 torch.manual_seed(args.seed)
 if torch.cuda.is_available():
@@ -83,17 +90,31 @@ train_data = batchify(corpus.train, args.batch_size, args)
 val_data = batchify(corpus.valid, eval_batch_size, args)
 test_data = batchify(corpus.test, test_batch_size, args)
 
+
+def model_save(fn):
+    with open(fn, 'wb') as f:
+        torch.save([model, criterion, optimizer], f)
+
+def model_load(fn):
+    global model, criterion, optimizer
+    with open(fn, 'rb') as f:
+        model, criterion, optimizer = torch.load(f)
+
 ###############################################################################
 # Build the model
 ###############################################################################
 
 ntokens = len(corpus.dictionary)
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth, args.dropouti, args.dropoute, args.wdrop, args.tied)
+#model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.dropouth, args.dropouti, args.dropoute, args.wdrop, args.tied)
+
+model = model.AWD(args.model, ntokens, args.emsize, args.nhid,
+                       args.nlayers, args.dropout, args.dropouth,
+                       args.dropouti, args.dropoute, args.wdrop, args.tied)
 if args.cuda:
     model.cuda()
 total_params = sum(x.size()[0] * x.size()[1] if len(x.size()) > 1 else x.size()[0] for x in model.parameters())
-print('Args:', args)
-print('Model total parameters:', total_params)
+logging('Args: {}'.format(args))
+logging('Model total parameters: {}'.format(total_params))
 
 criterion = nn.CrossEntropyLoss()
 
@@ -125,6 +146,7 @@ def train():
     ntokens = len(corpus.dictionary)
     hidden = model.init_hidden(args.batch_size)
     batch, i = 0, 0
+    model.train()
     while i < train_data.size(0) - 1 - 1:
         bptt = args.bptt if np.random.random() < 0.95 else args.bptt / 2.
         # Prevent excessively small or negative sequence lengths
@@ -134,7 +156,6 @@ def train():
 
         lr2 = optimizer.param_groups[0]['lr']
         optimizer.param_groups[0]['lr'] = lr2 * seq_len / args.bptt
-        model.train()
         data, targets = get_batch(train_data, i, args, seq_len=seq_len)
 
         # Starting each batch, we detach the hidden state from how it was previously produced.
@@ -161,7 +182,7 @@ def train():
         if batch % args.log_interval == 0 and batch > 0:
             cur_loss = total_loss[0] / args.log_interval
             elapsed = time.time() - start_time
-            print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
+            logging('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
                     'loss {:5.2f} | ppl {:8.2f}'.format(
                 epoch, batch, len(train_data) // args.bptt, optimizer.param_groups[0]['lr'],
                 elapsed * 1000 / args.log_interval, cur_loss, math.exp(cur_loss)))
@@ -173,8 +194,7 @@ def train():
 
 
 # Load the best saved model.
-with open(args.save, 'rb') as f:
-    model = torch.load(f)
+model_load(os.path.join(CKPT_DIR, args.save))
 
 
 # Loop over epochs.
@@ -191,20 +211,23 @@ try:
         if 't0' in optimizer.param_groups[0]:
             tmp = {}
             for prm in model.parameters():
-                tmp[prm] = prm.data.clone()
-                prm.data = optimizer.state[prm]['ax'].clone()
+                #tmp[prm] = prm.data.clone()
+                tmp[prm] = prm.data.detach()
+                #prm.data = optimizer.state[prm]['ax'].clone()
+                prm.data = optimizer.state[prm]['ax'].detach()
 
             val_loss2 = evaluate(val_data)
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+            logging('-' * 89)
+            logging('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
                     'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
                                                val_loss2, math.exp(val_loss2)))
-            print('-' * 89)
+            logging('-' * 89)
 
             if val_loss2 < stored_loss:
-                with open(args.save, 'wb') as f:
-                    torch.save(model, f)
-                print('Saving Averaged!')
+                model_save(os.path.join(CKPT_DIR, 'asgd_finetune_'+args.save))
+                #with open(args.save, 'wb') as f:
+                #    torch.save(model, f)
+                logging('Saving Averaged!')
                 stored_loss = val_loss2
 
             for prm in model.parameters():
@@ -219,16 +242,17 @@ try:
         best_val_loss.append(val_loss2)
 
 except KeyboardInterrupt:
-    print('-' * 89)
-    print('Exiting from training early')
+    logging('-' * 89)
+    logging('Exiting from training early')
 
 # Load the best saved model.
-with open(args.save, 'rb') as f:
-    model = torch.load(f)
-    
+#with open(args.save, 'rb') as f:
+#    model = torch.load(f)
+model_load(os.path.join(CKPT_DIR, 'asgd_finetune_'+args.save))
+
 # Run on test data.
 test_loss = evaluate(test_data, test_batch_size)
-print('=' * 89)
-print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
+logging('=' * 89)
+logging('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
     test_loss, math.exp(test_loss)))
-print('=' * 89)
+logging('=' * 89)

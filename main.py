@@ -416,7 +416,7 @@ except KeyboardInterrupt:
     logging('Exiting from training early')
 
 # Load the best saved model.
-model_load(os.path.join(CKPT_DIR, args.save))
+model_load(os.path.join(CKPT_DIR, 'asgd'+args.save))
 
 # Run on test data.
 test_loss = evaluate(test_data, test_batch_size)
