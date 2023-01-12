@@ -233,15 +233,12 @@ try:
         if 't0' in optimizer.param_groups[0]:
             tmp = {}
             for prm in model.parameters():
-                #tmp[prm] = prm.data.clone()
-                tmp[prm] = prm.data.detach()
-                #prm.data = optimizer.state[prm]['ax'].clone()
-                #print(optimizer.state[prm])
-                try:
+                if prm in optimizer.state.keys():
+                    #tmp[prm] = prm.data.clone()
+                    tmp[prm] = prm.data.detach()
+                    #prm.data = optimizer.state[prm]['ax'].clone()
+                    #print(optimizer.state[prm])
                     prm.data = optimizer.state[prm]['ax'].detach()
-                except:
-                    #print(prm)
-                    pass
 
             val_loss2 = evaluate(val_data)
             logging('-' * 89)
