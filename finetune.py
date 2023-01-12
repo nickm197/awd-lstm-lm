@@ -209,7 +209,7 @@ model_load(os.path.join(CKPT_DIR, args.save))
 lr = args.lr
 stored_loss = evaluate(val_data)
 logging('-' * 89)
-logging('Starting with stored model validation loss {}'.format(stored_loss))
+logging('Stored model validation loss {:5.2f} / perplexity {:8.2f}'.format(stored_loss, math.exp(stored_loss)))
 logging('-' * 89)
 best_val_loss = []
 
@@ -285,7 +285,7 @@ except:
     logging('-' * 89)
     logging('No improvement in the validation loss :(')
     val_loss = evaluate(val_data)
-    logging('Validation loss is still {}'.format(val_loss))
+    logging('Validation loss / ppl is still {:5.2f} / {:8.2f}'.format(val_loss, math.exp(val_loss)))
     logging('-' * 89)
 
 # Run on test data.
